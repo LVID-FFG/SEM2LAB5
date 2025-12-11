@@ -1,23 +1,3 @@
-#pragma once
-#include "user.h"
-#include "student.h"
-#include "professor.h"
-#include "object.h"
-#include "data_manager.h"
-#include <vector>
-#include <memory>
-#include <map>
-#include <fstream>
-#include <set>
-using namespace std;
-
-struct SubmissionRecord {
-    int studentId;          // ID студента
-    string subjectName;     // Название предмета
-    string assignmentName;  // Название задания/доклада
-    string type;            // Тип: "assignment" или "report"
-    string status;          // Статус: "pending", "approved", "rejected"
-    string timestamp;       // Время сдачи
 };
 
 struct GradeRecord {
@@ -55,18 +35,6 @@ private:
     void removeReport(const string& subjectName, const string& reportName);        // Удаление доклада после оценки
     shared_ptr<Report> findReportForSubject(const string& subjectName, const string& reportName) const;  // Поиск доклада по предмету
     
-public:
-    UniversitySystem();
-    ~UniversitySystem();
-    
-    bool login(const string& name, const string& password);  // Вход в систему
-    void logout();                                           // Выход из системы
-    bool registerUser(const string& name, const string& password, User::Role role); // Регистрация нового пользователя
-    
-    void runStudentMenu(shared_ptr<Student> student);      // Меню для студента
-    void runProfessorMenu(shared_ptr<Professor> professor); // Меню для преподавателя
-    void run();                                            // Главный цикл программы
-    
     shared_ptr<Subject> findSubject(const string& name) const;  // Поиск предмета по имени
     shared_ptr<Report> findReport(const string& topic) const;   // Поиск доклада по теме
     shared_ptr<Student> findStudentById(int id) const;          // Поиск студента по ID
@@ -97,4 +65,17 @@ public:
     
     void showSubjectStatistics(const string& subjectName) const;    // Статистика по предмету
     void showStudentSubjectSummary(int studentId) const;            // Итоги по предметам для студента
+    
+    bool login(const string& name, const string& password);  // Вход в систему
+    void logout();                                           // Выход из системы
+    bool registerUser(const string& name, const string& password, User::Role role); // Регистрация нового пользователя
+    
+    void runStudentMenu(shared_ptr<Student> student);      // Меню для студента
+    void runProfessorMenu(shared_ptr<Professor> professor); // Меню для преподавателя
+    
+public:
+    UniversitySystem();
+    ~UniversitySystem();
+    
+    void run();                                            // Главный цикл программы
 };
