@@ -17,6 +17,25 @@ UniversitySystem::~UniversitySystem() {
     saveAllData();
 }
 
+void UniversitySystem::run() {
+    while (true) {
+        if (!currentUser) {
+            showMainMenu();
+        } else {
+            switch (currentUser->getRole()) {
+                case User::Role::STUDENT:
+                    runStudentMenu(dynamic_pointer_cast<Student>(currentUser));
+                    break;
+                case User::Role::PROFESSOR:
+                    runProfessorMenu(dynamic_pointer_cast<Professor>(currentUser));
+                    break;
+            }
+        }
+    }
+}
+
+// ==================== ПРИВАТНЫЕ МЕТОДЫ ====================
+
 void UniversitySystem::loadAllData() {
     int nextId = DataManager::loadNextUserId();
     User::updateNextId(nextId);
@@ -104,8 +123,6 @@ void UniversitySystem::loadAllData() {
     for (const auto& [subjectName, subjectGrades] : subjectGradesMap) {
         auto subject = findSubject(subjectName);
         
-
-        
         // Оценки за задания
         for (const auto& [studentId, grades] : subjectGrades.assignmentGrades) {
             for (const auto& [assignmentName, grade] : grades) {
@@ -174,7 +191,6 @@ void UniversitySystem::loadAllData() {
             }
         }
     }
-    
 }
 
 void UniversitySystem::saveAllData() {
@@ -200,7 +216,6 @@ void UniversitySystem::saveAllData() {
         grade.timestamp = g.timestamp;
         gradesData.push_back(grade);
     }
-    
     
     DataManager::saveAllData(users, subjects, assignments, reports,
                             studentEnrollments, submissionsData, gradesData);
@@ -255,23 +270,6 @@ bool UniversitySystem::registerUser(const string& name, const string& password,
     cout << "Пользователь " << name << " успешно зарегистрирован!\n";
     saveAllData();
     return true;
-}
-
-void UniversitySystem::run() {
-    while (true) {
-        if (!currentUser) {
-            showMainMenu();
-        } else {
-            switch (currentUser->getRole()) {
-                case User::Role::STUDENT:
-                    runStudentMenu(dynamic_pointer_cast<Student>(currentUser));
-                    break;
-                case User::Role::PROFESSOR:
-                    runProfessorMenu(dynamic_pointer_cast<Professor>(currentUser));
-                    break;
-            }
-        }
-    }
 }
 
 void UniversitySystem::showMainMenu() {
@@ -612,7 +610,6 @@ bool UniversitySystem::submitAssignment(int studentId, const string& subjectName
     return true;
 }
 
-// Выставление оценки за доклад
 bool UniversitySystem::gradeReport(const string& identifier,
                                   const string& reportName, double grade) {
     auto subject = findSubjectByNameOrCode(identifier);
@@ -623,13 +620,11 @@ bool UniversitySystem::gradeReport(const string& identifier,
     
     string subjectName = subject->getName();
     
-    // Проверяем, существует ли такой доклад
     if (!subject->hasReport(reportName)) {
         cout << "Ошибка: доклад '" << reportName << "' не существует\n";
         return false;
     }
     
-    // Проверяем, не выставлены ли уже оценки за этот доклад
     bool hasGrades = false;
     for (const auto& g : grades) {
         if (g.type == "report" && g.itemName == reportName && 
@@ -644,7 +639,6 @@ bool UniversitySystem::gradeReport(const string& identifier,
         return false;
     }
     
-    // Проверяем диапазон оценки
     if (grade < 0 || grade > 100) {
         cout << "Ошибка: оценка должна быть от 0 до 100\n";
         return false;
@@ -656,7 +650,6 @@ bool UniversitySystem::gradeReport(const string& identifier,
         return false;
     }
     
-    // Получаем участников доклада
     auto participants = report->getSignedUpStudents();
     
     if (participants.empty()) {
@@ -664,13 +657,10 @@ bool UniversitySystem::gradeReport(const string& identifier,
         return false;
     }
     
-    // Используем метод gradeAllReports, который запишет оценки в Subject
     subject->gradeAllReports(reportName, grade, participants);
     
-    // Добавляем оценки для участников в систему
     int count = 0;
     for (int studentId : participants) {
-        // Проверяем, что студент зачислен на предмет
         if (subject->isStudentEnrolled(studentId)) {
             GradeRecord gradeRecord;
             gradeRecord.studentId = studentId;
@@ -683,7 +673,6 @@ bool UniversitySystem::gradeReport(const string& identifier,
             grades.push_back(gradeRecord);
             count++;
             
-            // Уведомляем студента
             auto student = findStudentById(studentId);
             if (student) {
                 student->onGradeUpdated(subjectName, reportName, grade);
@@ -694,7 +683,6 @@ bool UniversitySystem::gradeReport(const string& identifier,
     cout << "Оценка " << fixed << setprecision(2) << grade << " выставлена " 
          << count << " студентам за доклад '" << reportName << "'\n";
     
-    // Удаляем доклад из списка отчетов после выставления оценок
     removeReport(subjectName, reportName);
     cout << "Доклад '" << reportName << "' удален\n";
     
@@ -1474,6 +1462,4 @@ void UniversitySystem::runProfessorMenu(shared_ptr<Professor> professor) {
         }
     }
 }
-
-
 
